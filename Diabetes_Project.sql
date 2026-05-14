@@ -66,8 +66,42 @@ select
 from diabetes 
 group by outcome;
 
+-- Q3 Identifying high risk patients using multiple conditions
 
+select 
+      Pregnancies,
+	  Glucose,
+      BMI,
+      Age
+from diabetes
+where outcome = 1
+and Glucose > (select avg(Glucose) from diabetes)
+and BMI > (select avg(BMI) from diabetes)
+and age > 40 
+order by glucose desc;
+      
+ select * from diabetes 
+ limit 3;
 
+-- Q4 Ranking patients by glucose or BMI levels 
+
+select *,
+      dense_rank() over (order by glucose desc) as glucose_rank
+from diabetes
+limit 10;
+
+-- Q5 Correlation-style analysis using aggregates 
+
+select 
+    case when outcome = 1 then 'Diabetic'
+         else 'Non-Diabetic' end as patient_type,
+	round(avg(Glucose),2) as avg_glucose,
+	round(avg(BMI),2) as avg_bmi,
+	round(avg(Age),2) as avg_age,
+    round(avg(BloodPressure),2) as avg_bp,
+	round(avg(Insulin),2) as avg_insulin
+from diabetes 
+group by outcome;
 
 
 
