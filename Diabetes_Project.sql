@@ -103,10 +103,38 @@ select
 from diabetes 
 group by outcome;
 
+-- Q6 Creating risk categories with case when 
 
+select 
+	case when Glucose < 100 then 'Low Risk'
+         when Glucose between 100 and 125 then 'Pre-Diabetic'
+         when Glucose between 126 and 150 then 'High-Risk'
+         when Glucose > 150 then 'very High Risk'
+	end as risk_category,
+count(*) as Patients_in_each_category 
+from diabetes 
+where Glucose is not null
+group by risk_category 
+order by Patients_in_each_category desc;
 
+-- Q7 Window funtion based rankings and percentiles 
 
-
+select *,
+	case when Glucose < 100 then 'Low Risk'
+         when Glucose between 100 and 125 then 'Pre-Diabetic'
+         when Glucose between 126 and 150 then 'High-Risk'
+         when Glucose > 150 then 'very High Risk'
+	end as risk_category,
+   rank() over (partition by case when Glucose < 100 then 'Low Risk'
+                                  when Glucose between 100 and 125 then 'Pre-Diabetic'
+								  when Glucose between 126 and 150 then 'High-Risk'
+                                  when Glucose > 150 then 'very High Risk'
+							 end
+                order by Glucose desc) as risk_within_category
+from diabetes 
+where Glucose is not null 
+order by risk_category, risk_within_category
+limit 20;
 
 
 
