@@ -35,6 +35,24 @@ CREATE DATABASE diabetes;
 USE diabetes;
 
 -- ===========================================================
+-- TABLE CREATION
+-- ===========================================================
+
+CREATE TABLE diabetes_data (
+    Pregnancies INT,
+    Glucose INT,
+    BloodPressure INT,
+    SkinThickness INT,
+    Insulin INT,
+    BMI DECIMAL(5,2),
+    DiabetesPedigreeFunction DECIMAL(5,3),
+    Age INT,
+    Outcome INT
+);
+
+-- Import diabetes.csv using MySQL Table Data Import Wizard
+
+-- ===========================================================
 -- DATA CLEANING
 -- ===========================================================
 
@@ -77,6 +95,15 @@ WHERE BMI = 0;
 UPDATE diabetes 
 SET insulin = NULL
 WHERE insulin = 0;
+
+-- Verify cleaned data
+
+SELECT * 
+FROM diabetes_data
+WHERE Glucose IS NULL
+OR BloodPressure IS NULL
+OR BMI IS NULL
+OR Insulin IS NULL;
 
 -- ===========================================================
 -- ANALYTICAL QUERIES
