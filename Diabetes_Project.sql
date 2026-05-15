@@ -1,8 +1,6 @@
 CREATE DATABASE diabetes;
 USE diabetes;
 
-SELECT * FROM diabetes;
-
 -- Check for null values 
 
 SELECT  
@@ -55,7 +53,7 @@ END AS age_group,
 COUNT(*) AS diabetic_count FROM diabetes 
 WHERE outcome = 1
 GROUP BY age_group 
-GROUP BY diabetic_count DESC;
+ORDER BY diabetic_count DESC;
     
 -- Q2 Comparing average Glucose and BMI of diabetic vs non-diabetic patients 
 
@@ -84,8 +82,7 @@ ORDER BY glucose DESC;
 
 SELECT *,
       DENSE_RANK() OVER (ORDER BY glucose DESC) AS glucose_rank
-FROM diabetes
-LIMIT 10;
+FROM diabetes;
 
 -- Q5 Correlation-style analysis using aggregates 
 
@@ -106,7 +103,7 @@ SELECT
 	CASE WHEN Glucose < 100 THEN 'Low Risk'
          WHEN Glucose BETWEEN 100 AND 125 THEN 'Pre-Diabetic'
          WHEN Glucose BETWEEN 126 AND 150 THEN 'High-Risk'
-         WHEN Glucose > 150 THEN 'very High Risk'
+         WHEN Glucose > 150 THEN 'Very High Risk'
 	END AS risk_category,
     COUNT(*) AS Patients_in_each_category 
 FROM diabetes 
@@ -116,24 +113,23 @@ ORDER BY Patients_in_each_category DESC;
 
 -- Q7 Window funtion based rankings and percentiles 
 
-select *,
-	case when Glucose < 100 then 'Low Risk'
-         when Glucose between 100 and 125 then 'Pre-Diabetic'
-         when Glucose between 126 and 150 then 'High-Risk'
-         when Glucose > 150 then 'very High Risk'
-	end as risk_category,
-   rank() over (partition by case when Glucose < 100 then 'Low Risk'
-                                  when Glucose between 100 and 125 then 'Pre-Diabetic'
-								  when Glucose between 126 and 150 then 'High-Risk'
-                                  when Glucose > 150 then 'very High Risk'
-							 end
-                order by Glucose desc) as risk_within_category
-from diabetes 
-where Glucose is not null 
-order by risk_category, risk_within_category
-limit 20;
+SELECT *,
+	CASE WHEN Glucose < 100 THEN 'Low Risk'
+         WHEN Glucose BETWEEN 100 AND 125 THEN 'Pre-Diabetic'
+         WHEN Glucose BETWEEN 126 AND 150 THEN 'High-Risk'
+         WHEN Glucose > 150 THEN 'Very High Risk'
+	END AS risk_category,
+   RANK() OVER (PARTITION BY CASE WHEN Glucose < 100 THEN 'Low Risk'
+                                  WHEN Glucose BETWEEN 100 AND 125 THEN 'Pre-Diabetic'
+								  WHEN Glucose BETWEEN 126 AND 150 THEN 'High-Risk'
+                                  WHEN Glucose > 150 THEN 'Very High Risk'
+							 END
+                ORDER BY Glucose DESC) AS risk_within_category
+FROM diabetes 
+WHERE Glucose IS NOT NULL
+ORDER BY risk_category, risk_within_category;
 
--- Q8 Find patients with glucose higher than average glucose of their age group
+-- Q8 Calculate average glucose level within each age group
 
 SELECT 
     Pregnancies,
@@ -141,14 +137,13 @@ SELECT
     BMI,
     Age,
     Outcome,
-    ROUND(AVG(Glucose) OVER (PARTITION BY 
-        CASE WHEN Age BETWEEN 20 AND 30 THEN '20-30'
-             WHEN Age BETWEEN 31 AND 40 THEN '31-40'
-             WHEN Age BETWEEN 41 AND 50 THEN '41-50'
-             ELSE '51+' END), 2) AS avg_glucose_age_group
+    ROUND(AVG(Glucose) OVER (PARTITION BY CASE WHEN Age BETWEEN 20 AND 30 THEN '20-30'
+											   WHEN Age BETWEEN 31 AND 40 THEN '31-40'
+                                               WHEN Age BETWEEN 41 AND 50 THEN '41-50'
+                                               ELSE '51+'
+										  END),2) AS avg_glucose_age_group
 FROM diabetes
-WHERE Glucose > (SELECT AVG(Glucose) FROM diabetes)
-ORDER BY Glucose DESC;
+WHERE Glucose IS NOT NULL;
 
 -- Q9 Find percentage of diabetic patients in each age group
 
@@ -179,11 +174,48 @@ AND BMI IS NOT NULL
 ORDER BY BMI DESC
 LIMIT 10;
 
+-- Q11 Find patients with above average BMI and glucose but no diabetes
 
+SELECT 
+    Pregnancies, 
+    Glucose, 
+    BMI, 
+    Age, 
+    Outcome
+FROM diabetes
+WHERE Outcome = 0
+AND BMI > (SELECT AVG(BMI) FROM diabetes)
+AND Glucose > (SELECT AVG(Glucose) FROM diabetes)
+ORDER BY Glucose DESC;
 
+-- Q12 Find patients in top 25th percentile for glucose using NTILE
 
+SELECT 
+    Pregnancies,
+    Glucose,
+    BMI,
+    Age,
+    Outcome,
+    NTILE(4) OVER (ORDER BY Glucose DESC) AS glucose_quartile
+FROM diabetes
+WHERE Glucose IS NOT NULL
+ORDER BY Glucose DESC;
 
+-- Q13 Find patients who are at borderline risk 
+-- (glucose between 120-140 and BMI between 28-35)
 
+SELECT 
+    Pregnancies,
+    Glucose,
+    BMI,
+    Age,
+    Outcome,
+    CASE WHEN Outcome = 1 THEN 'Diabetic' 
+         ELSE 'Non-Diabetic' END AS patient_type
+FROM diabetes
+WHERE Glucose BETWEEN 120 AND 140
+AND BMI BETWEEN 28 AND 35
+ORDER BY Glucose DESC;
 
 
 
