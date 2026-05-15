@@ -1,5 +1,42 @@
+/*
+===========================================================
+Diabetes Prediction Data Analysis Project
+===========================================================
+
+Project Objective:
+Analyze diabetes patient data using SQL to identify
+high-risk individuals, compare diabetic and non-diabetic
+patients, and perform analytical reporting using advanced
+SQL concepts.
+
+Tools Used:
+- MySQL Workbench
+- SQL
+- GitHub
+
+SQL Skills Demonstrated:
+- Data Cleaning
+- Aggregate Functions
+- GROUP BY
+- CASE Statements
+- Subqueries
+- Window Functions
+- DENSE_RANK()
+- NTILE()
+- Analytical Filtering
+
+Dataset:
+Pima Indians Diabetes Dataset
+
+===========================================================
+*/
+
 CREATE DATABASE diabetes;
 USE diabetes;
+
+-- ===========================================================
+-- DATA CLEANING
+-- ===========================================================
 
 -- Check for null values 
 
@@ -41,7 +78,11 @@ UPDATE diabetes
 SET insulin = NULL
 WHERE insulin = 0;
 
--- Q1 Finding age groups with highest diabetes risk
+-- ===========================================================
+-- ANALYTICAL QUERIES
+-- ===========================================================
+
+-- Q1 Analyze diabetes prevalence across different age groups
 
 SELECT
 CASE
@@ -54,8 +95,12 @@ COUNT(*) AS diabetic_count FROM diabetes
 WHERE outcome = 1
 GROUP BY age_group 
 ORDER BY diabetic_count DESC;
+
+-- Insight:
+-- Middle-aged and older patients show a higher concentration
+-- of diabetes-positive cases compared to younger age groups.
     
--- Q2 Comparing average Glucose and BMI of diabetic vs non-diabetic patients 
+-- Q2 Compare average glucose and BMI levels by diabetes outcome 
 
 SELECT
       outcome,
@@ -64,7 +109,11 @@ SELECT
 FROM diabetes 
 GROUP BY outcome;
 
--- Q3 Identifying high risk patients using multiple conditions
+-- Insight:
+-- Diabetic patients demonstrate significantly higher average
+-- glucose and BMI values than non-diabetic patients.
+
+-- Q3 Identify high-risk diabetic patients using multiple health indicators
 
 SELECT
       Pregnancies,
@@ -77,14 +126,23 @@ AND Glucose > (SELECT AVG(Glucose) FROM diabetes)
 AND BMI > (SELECT AVG(BMI) FROM diabetes)
 AND age > 40 
 ORDER BY glucose DESC;
+
+-- Insight:
+-- Patients with elevated glucose, high BMI, and increased age
+-- represent a high-risk population for diabetes complications.
       
--- Q4 Ranking patients by glucose or BMI levels 
+-- Q4 Rank patients based on glucose levels using window functions
 
 SELECT *,
       DENSE_RANK() OVER (ORDER BY glucose DESC) AS glucose_rank
-FROM diabetes;
+FROM diabetes
+WHERE Glucose IS NOT NULL;
 
--- Q5 Correlation-style analysis using aggregates 
+-- Insight:
+-- Ranking analysis helps identify patients with critically high
+-- glucose levels who may require immediate medical attention.
+
+-- Q5 Perform aggregate health metric analysis by patient category
 
 SELECT
     CASE WHEN outcome = 1 THEN 'Diabetic'
@@ -97,7 +155,12 @@ SELECT
 FROM diabetes 
 GROUP BY outcome;
 
--- Q6 Creating risk categories with case when 
+-- Insight:
+-- Aggregate metrics indicate noticeable differences in glucose,
+-- BMI, insulin, and blood pressure between patient groups.
+
+-- Q6 Classify patients into diabetes risk categories using CASE statements 
+
 
 SELECT 
 	CASE WHEN Glucose < 100 THEN 'Low Risk'
@@ -111,7 +174,11 @@ WHERE Glucose IS NOT NULL
 GROUP BY risk_category 
 ORDER BY Patients_in_each_category DESC;
 
--- Q7 Window funtion based rankings and percentiles 
+-- Insight:
+-- Risk categorization simplifies identification of patients
+-- requiring preventive monitoring or medical intervention.
+
+-- Q7 Rank patients within each glucose risk category
 
 SELECT *,
 	CASE WHEN Glucose < 100 THEN 'Low Risk'
@@ -129,7 +196,11 @@ FROM diabetes
 WHERE Glucose IS NOT NULL
 ORDER BY risk_category, risk_within_category;
 
--- Q8 Calculate average glucose level within each age group
+-- Insight:
+-- Partition-based ranking highlights the highest-risk patients
+-- within each glucose risk category.
+
+-- Q8 Calculate average glucose levels across different age groups
 
 SELECT 
     Pregnancies,
@@ -145,7 +216,11 @@ SELECT
 FROM diabetes
 WHERE Glucose IS NOT NULL;
 
--- Q9 Find percentage of diabetic patients in each age group
+-- Insight:
+-- Average glucose levels tend to increase gradually across
+-- higher age groups, indicating elevated diabetes risk.
+
+-- Q9 Analyze diabetes percentage distribution across age groups
 
 SELECT 
     CASE WHEN Age BETWEEN 20 AND 30 THEN '20-30'
@@ -159,7 +234,11 @@ FROM diabetes
 GROUP BY age_group
 ORDER BY diabetic_percentage DESC;
 
--- Q10 Find top 10 patients with highest BMI who are diabetic
+-- Insight:
+-- Certain age groups show a disproportionately higher percentage
+-- of diabetic patients compared to others.
+
+-- Q10 Identify diabetic patients with the highest BMI values
 
 SELECT 
     Pregnancies,
@@ -174,7 +253,11 @@ AND BMI IS NOT NULL
 ORDER BY BMI DESC
 LIMIT 10;
 
--- Q11 Find patients with above average BMI and glucose but no diabetes
+-- Insight:
+-- Extremely high BMI values are frequently associated with
+-- diabetes-positive patients in the dataset.
+
+-- Q11 Identify non-diabetic patients with above-average glucose and BMI levels
 
 SELECT 
     Pregnancies, 
@@ -188,7 +271,11 @@ AND BMI > (SELECT AVG(BMI) FROM diabetes)
 AND Glucose > (SELECT AVG(Glucose) FROM diabetes)
 ORDER BY Glucose DESC;
 
--- Q12 Find patients in top 25th percentile for glucose using NTILE
+-- Insight:
+-- Some non-diabetic patients already exhibit elevated glucose
+-- and BMI levels, suggesting potential future diabetes risk.
+
+-- Q12 Segment patients into glucose quartiles using NTILE()
 
 SELECT 
     Pregnancies,
@@ -199,10 +286,13 @@ SELECT
     NTILE(4) OVER (ORDER BY Glucose DESC) AS glucose_quartile
 FROM diabetes
 WHERE Glucose IS NOT NULL
-ORDER BY Glucose DESC;
+ORDER BY glucose_quartile, Glucose DESC;
 
--- Q13 Find patients who are at borderline risk 
--- (glucose between 120-140 and BMI between 28-35)
+-- Insight:
+-- Quartile segmentation separates patients into percentile-based
+-- glucose groups for advanced risk analysis. 
+
+-- Q13 Identify patients with borderline diabetes risk indicators
 
 SELECT 
     Pregnancies,
@@ -217,9 +307,34 @@ WHERE Glucose BETWEEN 120 AND 140
 AND BMI BETWEEN 28 AND 35
 ORDER BY Glucose DESC;
 
+-- Insight:
+-- Borderline-risk patients may benefit from early lifestyle
+-- modifications and regular health monitoring.
 
 
+/*
+===========================================================
+PROJECT CONCLUSION
+===========================================================
 
+This project demonstrates the use of SQL for healthcare-
+oriented data analysis using the Diabetes Prediction Dataset.
+
+Key analytical tasks performed include:
+- Data cleaning and preprocessing
+- Diabetes risk analysis by age group
+- Comparison of diabetic vs non-diabetic patients
+- High-risk patient identification
+- Aggregate health metric analysis
+- Risk categorization using CASE statements
+- Window function based rankings and percentile analysis
+
+Advanced SQL concepts such as subqueries, window functions,
+DENSE_RANK(), NTILE(), and analytical filtering were used
+to generate meaningful patient insights.
+
+===========================================================
+*/
 
 
 
